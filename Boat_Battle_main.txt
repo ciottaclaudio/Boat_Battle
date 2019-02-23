@@ -1,0 +1,537 @@
+/*************************************************************************************************************************
+*                                                                                                                        *
+*   + CREATORE: Claudio Ciotta                                                                                           *
+*                                                                                                                        *
+*   + CLASSE: 4 IC                                                                                                       *
+*                                                                                                                        *
+*   + DATA CREAZIONE: 11/01/2019                                                                                         *
+*                                                                                                                        *
+*   + DATA ULTIMA MODIFICA: 22/01/2019                                                                                   *
+*                                                                                                                        *
+*   + PROGRAMMA: Implementazione del gioco della battglia navale in C++                                                  *
+*                                                                                                                        *
+*   + NOME PROGRAMMA: Boat Battle                                                                                        *
+*                                                                                                                        *
+**************************************************************************************************************************/
+
+#include <iostream>
+#ifdef WIN32
+    #define CLEAR system("cls")
+    #define PAUSE system("pause")
+#else
+    #define CLEAR system("clear")
+    #define PAUSE getchar()
+#endif
+#include <time.h>
+#include <windows.h>
+#include<conio.h>
+#include<string.h>
+#define N 11          //Dichiarazione della costante per la definizione delle dimensioni del campo da gioco
+#define BLUE SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_BLUE);
+#define RED SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED);
+#define GREEN SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_GREEN);
+#define HIT 10  //Nello stato di una classe ship indica che quest'ultima è stata colpita e affondata
+#define A 0  //Non sono presenti navi, solo acqua
+#define B 1  //Il colpo è stato sparato, ma a vuoto
+#define C 2  //Il colpo è stato sparato ed ha colpito la nave
+#define D 3  //Indica la posizione della nave
+
+using namespace std;
+
+void banner (void);
+void items (void);
+void menu (void);
+void field (void);
+void enemy_field (void);
+void newmatch (void);
+void static_field (void);
+void helm (void);
+
+int i, j, k = 0;
+int grid[N][N];
+int enemy_grid[N][N];
+
+class ship
+{
+    public:
+        int x; //Coordinata sull'asse delle ascisse della propria nave
+        int y; //Coordinata sull'asse delle ordinate della propria nave
+        int status; //Stato della propria nave
+};
+
+class enemy_ship
+{
+    public:
+        int x; //cordinata sull'asse delle ascisse della nave avversaria
+        int y; //cordinata sull'asse delle ordinate della nave avversaria
+        int status; //Stato della nave avversaria
+};
+
+int main()
+{
+    char selection; //variabile necessaria per la scelta dell'utente di restare nel gioco oppure uscire
+    char first_choice;
+    char menu_selection; //variabile necessaria per la scelta della permanenza nel menù
+    char information_selection; //variabile necessaria per la scelta tra le informazioni del programma e la guida
+    char c;
+    do
+    {
+        CLEAR;
+        do
+        {
+            banner();   //Richiamo la funzione per la generazione del titolo
+            helm();     //Richiamo la funzione per la generazione del timone
+            items();    //Richiamo la funzione per la generazione delle tre voci della home
+            GREEN;
+            cout<<"Si inserisca 1 per accedere al menu', 2 per accedere alle informazioni sul software, 3 per uscire...\n"<< endl;
+            cout<<"Effettuare la scelta: ";
+            first_choice = getch();
+        }while((first_choice != '1') && (first_choice != '2') && (first_choice != '3'));
+        CLEAR;
+        switch(first_choice)
+        {
+            case '1': //Menu per cominciare a giocare
+                do
+                {
+                    CLEAR;
+                    banner();
+                    menu();
+                    GREEN;
+                    cout<<"Inserire 1 per tornare alla home, 2 per iniziare una nuova partita... Effettuare la scelta: ";
+                    menu_selection = getch();
+                }while((menu_selection != '1') && (menu_selection != '2'));
+
+                switch(menu_selection)
+                {
+                    case '1': //Ci permette di tornare alla home
+                        break;
+
+                    case '2': //Ci permette di giocare una nuova partita
+                        banner();
+                        newmatch();
+                        GREEN;
+                        cout<<"Inserire 1 per tornare alla home: ";
+                        menu_selection = getch();
+                        break;
+                }
+                break;
+
+            case '2': //Informazioni sullo sviluppatore e sul software stesso e guida al gioco
+                do
+                {
+                    CLEAR;
+                    banner();
+                    BLUE;
+                    cout<<"\t _       ___  ___  ___ _______      ___   ___ ___                     ___       ___ _   _ ___ ___   _                       ____      _  _  ___  __  __ ___ "<< endl;
+                    cout<<"\t/ |___  / __|/ _ \\| __|_   _\\ \\    / /_\\ | _ \\ __|                   |_  )__   / __| | | |_ _|   \\ /_\\                     |__ /___  | || |/ _ \\|  \\/  | __|"<< endl;
+                    cout<<"\t| |___| \\__ \\ (_) | _|  | |  \\ \\/\\/ / _ \\|   / _|                     / /___| | (_ | |_| || || |) / _ \\                     |_ \\___| | __ | (_) | |\\/| | _| "<< endl;
+                    cout<<"\t|_|     |___/\\___/|_|   |_|   \\_/\\_/_/ \\_\\_|_\\___|                   /___|     \\___|\\___/|___|___/_/ \\_\\                   |___/     |_||_|\\___/|_|  |_|___|\n\n\n"<< endl;
+                    GREEN;
+                    cout<<"Inserire 1 per avere informazioni sul software, 2 per accedere alla guida e 3 per tornare alla home: ";
+                    information_selection = getch();
+                }while((information_selection != '1') && (information_selection != '2') && (information_selection != '3'));
+                switch(information_selection)
+                {
+                    case '1':   //Da qui è possibile accedere alle informazioni sul software
+                        CLEAR;
+                        banner();
+                        GREEN;
+                        cout<<"Informazioni sul software:\n\n";
+                        cout<<"Inserire 1 per tornare alla home: ";
+                        menu_selection = getch();
+                        break;
+
+                    case '2':   //Da qui è possibile accedere alla guida del gioco
+                        CLEAR;
+                        banner();
+                        GREEN;
+                        cout<<"Guida del gioco:\n\n";
+                        cout<<"Inserire 1 per tornare alla home: ";
+                        menu_selection = getch();
+                        break;
+
+                    case '3':   //Ci permette di tornare alla home
+                        break;
+                }
+                break;
+
+            case '3': //uscita dal programma
+                CLEAR;
+                exit(0);
+                break;
+        }
+    }while(selection == '1' || menu_selection == '1');
+    PAUSE;
+    return 0;
+}
+
+void banner (void) //Il banner che sarà presente in ogni sezione del gioco
+{
+    CLEAR;
+    RED;
+    cout<<"\t\t\t\t\t\t ____   ___    _  _____   ____    _  _____ _____ _     _____"<< endl;
+    cout<<"\t\t\t\t\t\t| __ ) / _ \\  / \\|_   _| | __ )  / \\|_   _|_   _| |   | ____|"<< endl;
+    cout<<"\t\t\t\t\t\t|  _ || | | |/ _ \\ | |   |  _ \\ / _ \\ | |   | | | |   |  _|"<< endl;
+    cout<<"\t\t\t\t\t\t| |_) | |_| / ___ \\| |   | |_) / ___ \\| |   | | | |___| |"<< endl;
+    cout<<"\t\t\t\t\t\t|____/ \\___/_/   \\_\\_|   |____/_/   \\_\\_|   |_| |_____|_____|\n\n"<< endl;
+}
+
+void items (void) //Stampa a video i tre comandi presenti sulla home del gioco
+{
+
+    BLUE;
+    cout<<"\t _     __  __ ___ _  _ _   _ _          ___      ___ _  _ ___ ___  ___ __  __   _    _______ ___  _  _ ___          ____      _____  _____ _____ "<< endl;
+    cout<<"\t/ |___|  \\/  | __| \\| | | | ( )        |_  )__  |_ _| \\| | __/ _ \\| _ \\  \\/  | /_\\  |_  /_ _/ _ \\| \\| |_ _|        |__ /___  | __\\ \\/ /_ _|_   _|"<< endl;
+    cout<<"\t| |___| |\\/| | _|| .` | |_| |/          / /___|  | || .` | _| (_) |   / |\\/| |/ _ \\  / / | | (_) | .` || |          |_ \\___| | _| >  < | |  | |"<< endl;
+    cout<<"\t|_|   |_|  |_|___|_|\\_|\\___/           /___|    |___|_|\\_|_| \\___/|_|_\\_|  |_/_/ \\_\\/___|___\\___/|_|\\_|___|        |___/     |___/_/\\_\\___| |_|\n\n"<< endl;
+}
+
+void menu (void) //Contiene le voci del primo menù
+{
+    BLUE;
+    cout<<"\t\t _       _  _  ___  __  __ ___                       ___      _  _ _____      __  __  __   _ _____ ___ _  _"<<endl;
+    cout<<"\t\t/ |___  | || |/ _ \\|  \\/  | __|                     |_  )__  | \\| | __\\ \\    / / |  \\/  | /_\\_   _/ __| || |"<<endl;
+    cout<<"\t\t| |___| | __ | (_) | |\\/| | _|                       / /___| | .` | _| \\ \\/\\/ /  | |\\/| |/ _ \\| || (__| __ |"<<endl;
+    cout<<"\t\t|_|     |_||_|\\___/|_|  |_|___|                     /___|    |_|\\_|___| \\_/\\_/   |_|  |_/_/ \\_\\_| \\___|_||_|\n\n\n\n"<<endl;
+
+}
+
+void newmatch (void) //La funzione che ci permette di giocare una partita, genera il campo e posiziona le navi
+{
+    enemy_ship enemy_ship1;         //Creazione membro nave nemica
+    enemy_ship enemy_ship2;
+    enemy_ship enemy_ship3;
+    enemy_ship enemy_ship4;
+    enemy_ship enemy_ship5;
+    srand(time(NULL));
+    enemy_ship1.x = rand()%10+1;    //Valorizzazione random della posizione sulle ascisse del primo membro della nave nemica
+    enemy_ship1.y = rand()%10+1;    //Valorizzazione random della posizione sulle ordinate del primo membro della nave nemica
+    enemy_ship2.x = rand()%10+1;
+    enemy_ship2.y = rand()%10+1;
+    enemy_ship3.x = rand()%10+1;
+    enemy_ship3.y = rand()%10+1;
+    enemy_ship4.x = rand()%10+1;
+    enemy_ship4.y = rand()%10+1;
+    enemy_ship5.x = rand()%10+1;
+    enemy_ship5.y = rand()%10+1;
+
+    int blow_x; //Colpo sull'asse delle ascisse
+    int blow_y; //Colpo sull'asse delle ordinate
+    int enemy_blow_x; //Colpo sull'asse delle ascisse
+    int enemy_blow_y; //Colpo sull'asse delle ordinate
+    char exit; //Variabile di uscita
+    char c;
+    grid[i][j] = 0;
+    enemy_grid[i][j] = 0;
+    GREEN;
+    cout<<"Bene... Direi che e' arrivato il momento di cominciare a posizionare le 5 navi a tua disposizione!\n\n";
+    ship ship1;
+    ship ship2;
+    ship ship3;
+    ship ship4;
+    ship ship5;
+    static_field();
+    GREEN;
+    cout<<"Inserire il valore dell'ascissa della prima nave: ";
+    cin>> ship1.x;
+    cout<<"\n";
+    cout<<"Inserire il valore dell'ordinata della prima nave: ";
+    cin>> ship1.y;
+    cout<<"\n";
+    CLEAR;
+    banner();
+    static_field();
+    GREEN;
+    cout<<"Inserire il valore dell'ascissa della seconda nave: ";
+    cin>> ship2.x;
+    cout<<"\n";
+    cout<<"Inserire il valore dell'ordinata della seconda nave: ";
+    cin>> ship2.y;
+    cout<<"\n";
+    CLEAR;
+    banner();
+    static_field();
+    GREEN;
+    cout<<"Inserire il valore dell'ascissa della terza nave: ";
+    cin>> ship3.x;
+    cout<<"\n";
+    cout<<"Inserire il valore dell'ordinata della terza nave: ";
+    cin>> ship3.y;
+    cout<<"\n";
+    CLEAR;
+    banner();
+    static_field();
+    GREEN;
+    cout<<"Inserire il valore dell'ascissa della quarta nave: ";
+    cin>> ship4.x;
+    cout<<"\n";
+    cout<<"Inserire il valore dell'ordinata della quarta nave: ";
+    cin>> ship4.y;
+    cout<<"\n";
+    CLEAR;
+    banner();
+    static_field();
+    GREEN;
+    cout<<"Inserire il valore dell'ascissa della quinta nave: ";
+    cin>> ship5.x;
+    cout<<"\n";
+    cout<<"Inserire il valore dell'ordinata della quinta nave: ";
+    cin>> ship5.y;
+    cout<<"\n";
+    PAUSE;
+    do
+    {
+        CLEAR;
+        banner();
+        GREEN;
+        cout<<"QUESTO E' IL TUO CAMPO DI BATTAGLIA:\n\n";
+        BLUE;
+        cout<<"\n\t\t    1   2   3   4   5   6   7   8   9   10\n\n";
+
+        c = 'A';
+        for(i=1; i<N; i++) //Generazione del mio campo di battaglia
+        {
+            BLUE;
+            cout<<"\t\t";
+            cout<<""<<c<<"   ";
+            c++;
+
+            for(j=1; j<N; j++)
+            {
+                grid[i][j];
+
+                if((enemy_blow_x == i && enemy_blow_y == j) && (enemy_blow_x != ship1.x && enemy_blow_y != ship1.y))
+                {
+                    grid[i][j] = C;
+                }
+                else if((enemy_blow_x == i && enemy_blow_y == j) && (enemy_blow_x != ship2.x && enemy_blow_y != ship2.y))
+                {
+                    grid[i][j] = C;
+                }
+                else if((enemy_blow_x == i && enemy_blow_y == j) && (enemy_blow_x != ship3.x && enemy_blow_y != ship3.y))
+                {
+                    grid[i][j] = C;
+                }
+                else if((enemy_blow_x == i && enemy_blow_y == j) && (enemy_blow_x != ship4.x && enemy_blow_y != ship4.y))
+                {
+                    grid[i][j] = C;
+                }
+                else if((enemy_blow_x == i && enemy_blow_y == j) && (enemy_blow_x != ship5.x && enemy_blow_y != ship5.y))
+                {
+                    grid[i][j] = C;
+                }
+
+                if((enemy_blow_x == i && enemy_blow_y == j) && (enemy_blow_x == ship1.x && enemy_blow_y == ship1.y))
+                {
+                    grid[i][j] = B;
+                }
+                else if((enemy_blow_x == i && enemy_blow_y == j) && (enemy_blow_x == ship2.x && enemy_blow_y == ship2.y))
+                {
+                    grid[i][j] = B;
+                }
+                else if((enemy_blow_x == i && enemy_blow_y == j) && (enemy_blow_x == ship3.x && enemy_blow_y == ship3.y))
+                {
+                    grid[i][j] = B;
+                }
+                else if((enemy_blow_x == i && enemy_blow_y == j) && (enemy_blow_x == ship4.x && enemy_blow_y == ship4.y))
+                {
+                    grid[i][j] = B;
+                }
+                else if((enemy_blow_x == i && enemy_blow_y == j) && (enemy_blow_x == ship5.x && enemy_blow_y == ship5.y))
+                {
+                    grid[i][j] = B;
+                }
+
+                if(grid[i][j] == A)
+                {
+                    BLUE;
+                    cout<<"~   ";
+                }
+                else if(grid[i][j] == C)
+                {
+                    GREEN;
+                    cout<<"#   ";
+                }
+                else if(grid[i][j] == B)
+                {
+                    RED;
+                    cout<<"*   ";
+                }
+                else if(grid[i][j] == D)
+                {
+                    RED;
+                    cout<<"$   ";
+                }
+            }
+            cout<<"\n"<< endl;
+        }
+        cout<<"\n";
+
+        GREEN;
+        cout<<"QUESTO E' IL CAMPO DI BATTAGLIA NEMICO:\n\n";
+        BLUE;
+        cout<<"\n\t\t    1   2   3   4   5   6   7   8   9   10\n\n";
+
+        c = 'A';
+        for(i=1; i<N; i++) //Generazione del campo di battaglia nemico
+        {
+            BLUE;
+            cout<<"\t\t";
+            cout<<""<<c<<"   ";
+            c++;
+
+            for(j=1; j<N; j++)
+            {
+                enemy_grid[i][j];
+
+                if((blow_x == i && blow_y == j) && (blow_x != enemy_ship1.x && blow_y != enemy_ship1.y))
+                {
+                    enemy_grid[i][j] = C;
+                }
+                else if((blow_x == i && blow_y == j) && (blow_x != enemy_ship2.x && blow_y != enemy_ship2.y))
+                {
+                    enemy_grid[i][j] = C;
+                }
+                else if((blow_x == i && blow_y == j) && (blow_x != enemy_ship3.x && blow_y != enemy_ship3.y))
+                {
+                    enemy_grid[i][j] = C;
+                }
+                else if((blow_x == i && blow_y == j) && (blow_x != enemy_ship4.x && blow_y != enemy_ship4.y))
+                {
+                    enemy_grid[i][j] = C;
+                }
+                else if((blow_x == i && blow_y == j) && (blow_x != enemy_ship5.x && blow_y != enemy_ship5.y))
+                {
+                    enemy_grid[i][j] = C;
+                }
+
+                if((blow_x == i && blow_y == j) && (blow_x == enemy_ship1.x && blow_y == enemy_ship1.y))
+                {
+                    enemy_grid[i][j] = B;
+                }
+                else if((blow_x == i && blow_y == j) && (blow_x == enemy_ship2.x && blow_y == enemy_ship2.y))
+                {
+                    enemy_grid[i][j] = B;
+                }
+                else if((blow_x == i && blow_y == j) && (blow_x == enemy_ship3.x && blow_y == enemy_ship3.y))
+                {
+                    enemy_grid[i][j] = B;
+                }
+                else if((blow_x == i && blow_y == j) && (blow_x == enemy_ship4.x && blow_y == enemy_ship4.y))
+                {
+                    enemy_grid[i][j] = B;
+                }
+                else if((blow_x == i && blow_y == j) && (blow_x == enemy_ship5.x && blow_y == enemy_ship5.y))
+                {
+                    enemy_grid[i][j] = B;
+                }
+
+                if(enemy_grid[i][j] == C)
+                {
+                    GREEN;
+                    cout<<"#   ";
+                }
+                else if(enemy_grid[i][j] == B)
+                {
+                    RED;
+                    cout<<"*   ";
+                }
+                else
+                {
+                    BLUE;
+                    cout<<"~   ";
+                }
+
+
+            }
+            cout<<"\n"<< endl;
+        }
+
+        GREEN;
+        cout<<enemy_ship1.x<<enemy_ship1.y<<"\n";
+        cout<<enemy_ship2.x<<enemy_ship2.y<<"\n";
+        srand(time(NULL));
+        enemy_blow_x = rand()%10+1;
+        enemy_blow_y = rand()%10+1;
+        cout<<"\nAttacca x: ";
+        cin>> blow_x;
+        cout<<"\n";
+        cout<<"Attacca y: ";
+        cin>> blow_y;
+        cout<<"\n";
+        cout<<"Continua ad attaccare: ";
+        exit = getch();
+        cout<<"\n";
+    }while (exit == '1');
+}
+
+
+void static_field (void)
+{
+    BLUE;
+    cout<<"\t\t   1   2   3   4   5   6   7   8   9   10\n\n";
+    cout<<"\t\tA  ~   ~   ~   ~   ~   ~   ~   ~   ~   ~\n\n";
+    cout<<"\t\tB  ~   ~   ~   ~   ~   ~   ~   ~   ~   ~\n\n";
+    cout<<"\t\tC  ~   ~   ~   ~   ~   ~   ~   ~   ~   ~\n\n";
+    cout<<"\t\tD  ~   ~   ~   ~   ~   ~   ~   ~   ~   ~\n\n";
+    cout<<"\t\tE  ~   ~   ~   ~   ~   ~   ~   ~   ~   ~\n\n";
+    cout<<"\t\tF  ~   ~   ~   ~   ~   ~   ~   ~   ~   ~\n\n";
+    cout<<"\t\tG  ~   ~   ~   ~   ~   ~   ~   ~   ~   ~\n\n";
+    cout<<"\t\tH  ~   ~   ~   ~   ~   ~   ~   ~   ~   ~\n\n";
+    cout<<"\t\tI  ~   ~   ~   ~   ~   ~   ~   ~   ~   ~\n\n";
+    cout<<"\t\tL  ~   ~   ~   ~   ~   ~   ~   ~   ~   ~\n\n";
+}
+
+void helm (void)
+{
+    BLUE;
+    cout<<"\t\t\t\t\t\t\t                      --                      \n";
+
+    cout<<"\t\t\t\t\t\t\t                     :..:                     \n";
+
+    cout<<"\t\t\t\t\t\t\t                     ----                     \n";
+
+    cout<<"\t\t\t\t\t\t\t       __            ----            __       \n";
+
+    cout<<"\t\t\t\t\t\t\t      :..:        -::++++:::        :..:      \n";
+
+    cout<<"\t\t\t\t\t\t\t       -:.-:..::..............::..--.:-       \n";
+
+    cout<<"\t\t\t\t\t\t\t          :-+-.......-::-........+-:-         \n";
+
+    cout<<"\t\t\t\t\t\t\t          :-....-+-...-.-..-+-.....+          \n";
+
+    cout<<"\t\t\t\t\t\t\t         +....-:.-....-.-...--::....+         \n";
+
+    cout<<"\t\t\t\t\t\t\t        +....+..-..-..-.-.--.-..+....:        \n";
+
+    cout<<"\t\t\t\t\t\t\t       --...+.....-.-:::::.-.....+....:       \n";
+
+    cout<<"\t\t\t\t\t\t\t-:::--:*....+------:-:-::-:------+-...+:-::::-\n";
+
+    cout<<"\t\t\t\t\t\t\t:..-::-+....+------:------:------+-...:-::-..:\n";
+
+    cout<<"\t\t\t\t\t\t\t       :....+......----:-:--.....+....:       \n";
+
+    cout<<"\t\t\t\t\t\t\t        :...-:...-.--.-.-.-.-...:-...:        \n";
+
+    cout<<"\t\t\t\t\t\t\t        -:....*-.--...-.....-.-+-...-:        \n";
+
+    cout<<"\t\t\t\t\t\t\t         -:....-+-....--.....+-....:-         \n";
+
+    cout<<"\t\t\t\t\t\t\t          :+-.....-++++++++-......+:          \n";
+
+    cout<<"\t\t\t\t\t\t\t        -:.-:::................-++-.:-        \n";
+
+    cout<<"\t\t\t\t\t\t\t      :-.--     :+:........:+:     --.-:      \n";
+
+    cout<<"\t\t\t\t\t\t\t      -::            :--:            ::-      \n";
+
+    cout<<"\t\t\t\t\t\t\t                     .:--                     \n";
+
+    cout<<"\t\t\t\t\t\t\t                     :..:                     \n";
+
+    cout<<"\t\t\t\t\t\t\t                     -:--                     \n\n";
+}
+
+
